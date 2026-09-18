@@ -29,6 +29,7 @@
         <button data-tab="courses">📚 Courses</button>
         <button data-tab="tutorials">🎬 Tutorials</button>
         <button data-tab="users">👥 Users</button>
+        <button data-tab="files">📁 Files</button>
       </nav>
       <div class="dash-side-foot">
         <a href="index.html">← View site</a>
@@ -97,6 +98,16 @@
           </table>
         </div>
       </section>
+
+      <section id="tab-files" class="tab">
+        <div class="tab-toolbar">
+          <input type="search" id="file-search" placeholder="🔍 Search files…" />
+          <input type="file" id="file-input" multiple hidden />
+          <button class="btn btn-primary" id="upload-files-btn">⬆ Upload files</button>
+        </div>
+        <p class="result-count" id="files-count"></p>
+        <div class="grid" id="files-grid"></div>
+      </section>
     </main>
   </div>
 
@@ -111,6 +122,7 @@
   <script src="js/dashboard-courses.js"></script>
   <script src="js/dashboard-tutorials.js"></script>
   <script src="js/dashboard-users.js"></script>
+  <script src="js/dashboard-files.js"></script>
   <script>renderNav('dashboard');</script>
 </body>
 </html>

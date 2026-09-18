@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     courses: 'Create, edit and manage your courses',
     tutorials: 'Create, edit and manage your tutorials',
     users: 'Manage users, roles and access',
+    files: 'Upload files from your computer and manage them',
   };
 
   function switchTab(name) {

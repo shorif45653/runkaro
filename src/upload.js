@@ -22,8 +22,13 @@ const fileFilter = (req, file, cb) => {
   cb(new Error('Unsupported file type — images (jpg, png, webp, gif) and videos (mp4, webm, ogg) only.'));
 };
 
-module.exports = multer({
+const uploads = multer({
   storage,
   fileFilter,
   limits: { fileSize: 150 * 1024 * 1024 }, // 150 MB
 });
+
+// Exposed for the admin Files manager (src/routes/files.js):
+uploads.UPLOAD_DIR = UPLOAD_DIR;
+
+module.exports = uploads;

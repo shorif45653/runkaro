@@ -27,6 +27,7 @@ app.use('/api/auth', require('./src/routes/auth'));
 app.use('/api/courses', require('./src/routes/courses'));
 app.use('/api/tutorials', require('./src/routes/tutorials'));
 app.use('/api/users', require('./src/routes/users'));
+app.use('/api/files', require('./src/routes/files'));
 
 app.get('/api/health', (req, res) => {
   res.json({ ok: true, name: 'Runkaro API', time: new Date().toISOString() });
@@ -68,6 +69,6 @@ app.listen(PORT, () => {
   console.log('  ✦ Runkaro is running');
   console.log(`  ✦ Site      : http://localhost:${PORT}`);
   console.log(`  ✦ Dashboard : http://localhost:${PORT}/dashboard.html`);
-  console.log('  ✦ Demo admin: admin@runkaro.com / Admin@123');
+  console.log('  ✦ Admin login: set ADMIN_EMAIL / ADMIN_PASSWORD env vars (else the seeded demo credentials apply)');
   console.log('');
 });

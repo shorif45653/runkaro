@@ -30,6 +30,7 @@ Anyone can also create a new account via **Get started → Create account**.
   - **Courses** — upload/create/edit/delete courses with optional thumbnail images.
   - **Tutorials** — create/edit/delete tutorials using a YouTube link **or** an uploaded video file (up to 150 MB), plus thumbnails.
   - **Users** — promote/demote roles, suspend/activate accounts, delete users.
+  - **Files manager** — upload any files from your computer (images, videos, PDFs, archives…) and copy public URLs.
 - **Student area** — browse courses/tutorials with search + filters, course detail pages
   with one-click enrollment, "My Learning" page, embedded video player for tutorials.
 - **Demo data** — on first run the server seeds the demo accounts, 4 courses and 4 tutorials.
@@ -81,6 +82,9 @@ uploads/                  Uploaded images/videos
 | GET    | `/api/users`              | Admin    | List users                       |
 | PATCH  | `/api/users/:id`          | Admin    | Change role / status             |
 | DELETE | `/api/users/:id`          | Admin    | Delete user                      |
+| GET    | `/api/files`              | Admin    | List uploaded files              |
+| POST   | `/api/files`              | Admin    | Upload files (multipart, ≤10)    |
+| DELETE | `/api/files/:name`        | Admin    | Delete an uploaded file          |
 | GET    | `/api/stats`              | Admin    | Dashboard stats                  |
 
 ## Notes
