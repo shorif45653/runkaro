@@ -87,6 +87,16 @@ uploads/                  Uploaded images/videos
 | DELETE | `/api/files/:name`        | Admin    | Delete an uploaded file          |
 | GET    | `/api/stats`              | Admin    | Dashboard stats                  |
 
+## Deploy (free)
+
+The site runs on [Render](https://render.com)'s free plan — every push to `main` auto-deploys.
+
+1. Push this repo to GitHub.
+2. On render.com → **New + → Web Service** → connect the repo.
+3. Runtime **Node**, build command `npm install`, start command `npm start`, health-check path `/api/health`.
+4. Add env vars `ADMIN_EMAIL` / `ADMIN_PASSWORD` (and optionally `STUDENT_EMAIL` / `STUDENT_PASSWORD`) to replace the demo credentials — they apply when the database is first seeded (fresh service, or delete `data/db.json` and redeploy).
+5. Free-tier note: the disk is **ephemeral** — `data/` and `uploads/` reset on every restart/redeploy. Prefer YouTube links for tutorials and keep important uploads backed up elsewhere.
+
 ## Notes
 
 - Set a custom port with `PORT=4000 npm start` (or `$env:PORT=4000` in PowerShell).

@@ -13,7 +13,8 @@ function seed() {
   const db = dbSvc.get();
   let changed = false;
 
-  // Credentials can be overridden with env vars (see deploy/ecosystem.config.js).
+  // Credentials can be overridden with env vars: ADMIN_EMAIL, ADMIN_PASSWORD,
+  // STUDENT_EMAIL, STUDENT_PASSWORD (e.g. set them on Render's dashboard).
   const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'admin@runkaro.com').toLowerCase();
   const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin@123';
   const STUDENT_EMAIL = (process.env.STUDENT_EMAIL || 'student@runkaro.com').toLowerCase();
