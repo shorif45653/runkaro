@@ -30,7 +30,7 @@
       <div class="field"><label for="confirm">Confirm password</label><input id="confirm" type="password" required placeholder="Repeat your password" autocomplete="new-password" /></div>
       <button class="btn btn-primary btn-block" type="submit" id="submit-btn">Create account</button>
       <p class="auth-alt">Already have an account? <a href="login.html">Sign in</a></p>
-      <div class="demo-box">
+      <div class="demo-box" id="demo-box">
         <p class="demo-title">⚡ Just exploring? Use the demo admin</p>
         <div class="demo-row"><span class="who">Admin</span><code>admin@runkaro.com / Admin@123</code><button type="button" class="btn btn-mini" data-goto="login">Sign in</button></div>
       </div>
@@ -43,6 +43,10 @@
   <script src="js/nav.js"></script>
   <script>
     renderNav(null);
+    // Demo-credentials box is a local-development convenience — hide it on any public host.
+    if (!['localhost', '127.0.0.1'].includes(location.hostname)) {
+      document.getElementById('demo-box')?.remove();
+    }
     if (Auth.isLoggedIn()) location.replace(Auth.isAdmin() ? 'dashboard.html' : 'courses.html');
     document.querySelectorAll('[data-goto]').forEach((b) => b.addEventListener('click', () => location.href = 'login.html'));
     document.getElementById('register-form').addEventListener('submit', async (e) => {

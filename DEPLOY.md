@@ -10,32 +10,39 @@ Verified against provider docs, September 2026.
 | **B. Oracle Always Free VM** | $0 | Yes | Yes (200 GB disk) | 1–2 hrs | The real, permanent home |
 | **C. Cloudflare Tunnel (own PC)** | $0 | Only while PC runs | Yes | ~30 min | Quick public URL for testing |
 
-**Recommendation:** start with **A** today (share the link in minutes), move to **B** when you
-want courses/uploads to survive restarts. Both are 100% free — no card charged.
+**Recommendation:** start with **A** today — **no card needed anywhere** (share the link in
+minutes). Option B is also $0 forever but **requires a card at signup** for identity
+verification, so do it later when you want courses/uploads to survive restarts.
 
 ---
 
-## Option A — Render.com (fastest, no credit card)
+## Option A — Render.com (fastest, no card at all)
+
+Sign up with your GitHub account — Render's free tier needs **no credit card and no payment
+method anywhere**.
 
 1. **Push the repo to GitHub** (git is already initialized locally — see "Git" at the bottom).
-2. Sign up at **render.com** → Dashboard → **New + → Web Service** → connect your GitHub repo.
-   (This repo includes a `render.yaml` blueprint — you can instead use **New + → Blueprint** and
-   Render prefills everything below.)
-3. Settings:
-   - Runtime: **Node**
-   - Build Command: `npm install`
-   - Start Command: `npm start`
-   - **Health Check Path:** `/api/health`
-   - Instance Type: **Free**
-4. Click **Create Web Service**. Render builds, starts, and gives you
-   `https://<your-name>.onrender.com` — free HTTPS and free subdomain included.
-   On first boot the server auto-seeds the demo accounts and sample content.
+2. Sign up at **render.com** with GitHub → Dashboard → **New + → Blueprint** → select the
+   `runkaro` repo. The included `render.yaml` prefills everything: Node runtime,
+   `npm install` / `npm start`, health check `/api/health`, Free plan.
+3. **Set your real admin credentials** — during the Blueprint apply, Render asks you for
+   `ADMIN_EMAIL` and `ADMIN_PASSWORD` (marked secret in the blueprint). Enter your own values:
+   on first boot the seeder creates the admin account with them, so nobody can use the public
+   demo login. The demo-credentials box on the login/register pages also hides itself
+   automatically on any non-localhost host.
+4. Click **Apply** → Render builds and gives you `https://<your-name>.onrender.com`
+   (free HTTPS + free subdomain included). Sample courses/tutorials seed automatically.
+5. *(Optional)* Keep it awake: free services **sleep after 15 minutes** of no traffic and the
+   next visitor waits ~30–60 s. Create a free monitor at **cron-job.org** or **UptimeRobot**
+   (both free, no card) that pings `https://<your-name>.onrender.com/api/health` every
+   10 minutes — visitors never see the cold start, and the 750 free instance-hours still cover
+   a full month 24/7.
 
-**Free-tier realities (from Render's docs):** the service **sleeps after 15 minutes** without
-traffic — the next visitor waits ~30–60 s for a cold start. You get 750 free instance-hours and
-included bandwidth per month. **Local files are lost on every restart/redeploy**, i.e. the JSON
-database and uploaded images/videos reset to the seed data. Perfect for a public demo; don't
-treat it as durable storage.
+**Free-tier realities (from Render's docs):** **local files are lost on every
+restart/redeploy** — the database and uploaded images/videos reset to the seed data (the pinger
+prevents sleep, but Render may still restart a free instance at any time). For a public demo:
+prefer **YouTube links** over uploaded videos, and re-add anything important after a redeploy.
+When you want durable storage later, move to Oracle (Option B) — same code, `git pull` on the VM.
 
 ---
 

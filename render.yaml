@@ -1,6 +1,8 @@
 # Render Blueprint — one-click free deploy for Runkaro.
 # Commit this file, push to GitHub, then on render.com choose
 # "New +" → "Blueprint" and pick the repo — everything below is prefilled.
+# ADMIN_EMAIL / ADMIN_PASSWORD are marked secret: Render asks you for the
+# real values at apply time, and the seeder uses them on first boot.
 # Docs: https://render.com/docs/blueprint-spec
 services:
   - type: web
@@ -11,3 +13,15 @@ services:
     startCommand: npm start
     healthCheckPath: /api/health
     autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: ADMIN_EMAIL # your real admin login — entered by you during apply
+        sync: false
+      - key: ADMIN_PASSWORD # your real admin password — entered by you during apply
+        sync: false
+      - key: STUDENT_EMAIL
+        value: student@runkaro.com
+      - key: STUDENT_PASSWORD
+        value: Student@123
+

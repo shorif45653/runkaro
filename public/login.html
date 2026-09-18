@@ -28,7 +28,7 @@
       <div class="field"><label for="password">Password</label><input id="password" type="password" required placeholder="••••••••" autocomplete="current-password" /></div>
       <button class="btn btn-primary btn-block" type="submit" id="submit-btn">Sign in</button>
       <p class="auth-alt">New to Runkaro? <a href="register.html">Create an account</a></p>
-      <div class="demo-box">
+      <div class="demo-box" id="demo-box">
         <p class="demo-title">⚡ Demo credentials</p>
         <div class="demo-row"><span class="who">Admin</span><code>admin@runkaro.com / Admin@123</code><button type="button" class="btn btn-mini" data-fill="admin@runkaro.com|Admin@123">Use</button></div>
         <div class="demo-row"><span class="who">Student</span><code>student@runkaro.com / Student@123</code><button type="button" class="btn btn-mini" data-fill="student@runkaro.com|Student@123">Use</button></div>
@@ -42,6 +42,10 @@
   <script src="js/nav.js"></script>
   <script>
     renderNav(null);
+    // Demo-credentials box is a local-development convenience — hide it on any public host.
+    if (!['localhost', '127.0.0.1'].includes(location.hostname)) {
+      document.getElementById('demo-box')?.remove();
+    }
     const params = new URLSearchParams(location.search);
     const next = params.get('next');
     if (Auth.isLoggedIn()) location.replace(Auth.isAdmin() && !next ? 'dashboard.html' : (next || 'courses.html'));
