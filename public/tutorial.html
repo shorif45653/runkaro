@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tutorial · Runkaro</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/effects.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/ui.css" />
+  <link rel="stylesheet" href="css/sections.css" />
+  <link rel="stylesheet" href="css/pages.css" />
+</head>
+<body>
+  <div class="bg-scene" aria-hidden="true"><span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span><span class="blob b4"></span><div class="grid-overlay"></div></div>
+  <header id="site-nav" class="site-nav glass"></header>
+
+  <main class="container">
+    <div class="page-hero"><a class="btn btn-sm" href="tutorials.html">← All tutorials</a></div>
+    <div id="detail"></div>
+  </main>
+  <div id="toast-root"></div>
+
+  <script src="js/api.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/nav.js"></script>
+  <script>
+    renderNav('tutorials');
+    const id = new URLSearchParams(location.search).get('id');
+    const detailEl = document.getElementById('detail');
+
+    (async function boot() {
+      if (!id) { location.href = 'tutorials.html'; return; }
+      let t, all = [];
+      try {
+        t = (await api('/tutorials/' + id)).tutorial;
+        all = (await api('/tutorials')).tutorials;
+      } catch (e) { detailEl.innerHTML = emptyHTML(e.status === 404 ? 'This tutorial does not exist.' : 'Could not load this tutorial.', '🔍'); return; }
+
+      let player;
+      if (t.videoFile) {
+        player = `<video controls preload="metadata" src="${escapeHTML(t.videoFile)}"></video>`;
+      } else if (t.videoUrl) {
+        const embed = youtubeEmbed(t.videoUrl);
+        player = embed
+          ? `<iframe src="${embed}" title="${escapeHTML(t.title)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>`
+          : `<div style="display:grid;place-items:center;height:100%"><a class="btn btn-primary" href="${escapeHTML(t.videoUrl)}" target="_blank" rel="noopener">Open resource ↗</a></div>`;
+      } else {
+        player = `<div style="display:grid;place-items:center;height:100%;color:var(--muted)">No video available yet.</div>`;
+      }
+
+      const others = all.filter((x) => x.id !== id).slice(0, 4);
+      detailEl.innerHTML = `<div class="detail-grid">
+        <article class="glass detail-main">
+          <div class="player">${player}</div>
+          <div class="meta-row" style="margin-top:16px"><span class="badge badge-cat">${escapeHTML(t.category)}</span>${levelBadge(t.level)}</div>
+          <h1>${escapeHTML(t.title)}</h1>
+          <p class="muted">By ${escapeHTML(t.author)} · Published ${formatDate(t.createdAt)}</p>
+          <p class="detail-desc">${escapeHTML(t.description || 'No description yet.')}</p>
+        </article>
+        <aside>
+          <div class="glass detail-side">
+            <div class="side-price" style="font-size:1.2rem">${t.videoFile ? '📁 Uploaded video' : '▶ Streaming'}</div>
+            <div class="kv"><span>Level</span><b>${escapeHTML(t.level)}</b></div>
+            <div class="kv"><span>Duration</span><b>${escapeHTML(t.duration || '—')}</b></div>
+            <div class="kv" style="border-bottom:none"><span>Category</span><b>${escapeHTML(t.category)}</b></div>
+            <a class="btn btn-primary side-actions" href="tutorials.html">More tutorials</a>
+            ${Auth.isAdmin() ? '<a class="btn btn-sm" href="dashboard.html">🛠️ Manage in dashboard</a>' : ''}
+          </div>
+          ${others.length ? `<div class="glass side-block"><h3>Up next</h3>${others.map((o) =>
+            `<a class="related-item" href="tutorial.html?id=${encodeURIComponent(o.id)}"><span class="u-avatar" style="border-radius:9px">▶</span><div><strong style="font-size:.9rem">${escapeHTML(o.title)}</strong><div class="cell-sub">${escapeHTML(o.duration || '')}</div></div></a>`).join('')}</div>` : ''}
+        </aside>
+      </div>`;
+    })();
+  </script>
+</body>
+</html>

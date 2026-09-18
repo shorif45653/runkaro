@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Courses · Runkaro</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/effects.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/ui.css" />
+  <link rel="stylesheet" href="css/sections.css" />
+  <link rel="stylesheet" href="css/pages.css" />
+</head>
+<body>
+  <div class="bg-scene" aria-hidden="true"><span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span><span class="blob b4"></span><div class="grid-overlay"></div></div>
+  <header id="site-nav" class="site-nav glass"></header>
+
+  <main class="container">
+    <section class="page-hero">
+      <span class="glass-chip">📚 Course library</span>
+      <h1>Explore <span class="grad-text">courses</span></h1>
+      <p class="muted">Structured, in-depth programs to level up your skills.</p>
+    </section>
+    <div class="filters">
+      <input type="search" id="search" placeholder="🔍 Search courses…" />
+      <select id="category"><option value="all">All categories</option></select>
+      <select id="level">
+        <option value="all">All levels</option>
+        <option>Beginner</option><option>Intermediate</option><option>Advanced</option>
+      </select>
+    </div>
+    <p class="result-count" id="count"></p>
+    <div class="grid" id="grid"></div>
+  </main>
+  <div id="toast-root"></div>
+
+  <script src="js/api.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/nav.js"></script>
+  <script>
+    renderNav('courses');
+    const grid = document.getElementById('grid');
+    const searchEl = document.getElementById('search');
+    const catEl = document.getElementById('category');
+    const lvlEl = document.getElementById('level');
+    let all = [];
+
+    function apply() {
+      const q = searchEl.value.trim().toLowerCase();
+      const list = all.filter((c) =>
+        (!q || c.title.toLowerCase().includes(q) || (c.description || '').toLowerCase().includes(q)) &&
+        (catEl.value === 'all' || c.category === catEl.value) &&
+        (lvlEl.value === 'all' || c.level === lvlEl.value));
+      document.getElementById('count').textContent = `${list.length} course${list.length === 1 ? '' : 's'} found`;
+      grid.innerHTML = list.map(courseCard).join('') || emptyHTML('No courses match your filters.', '🔍');
+    }
+
+    (async () => {
+      try {
+        all = (await api('/courses')).courses;
+        const cats = [...new Set(all.map((c) => c.category))];
+        catEl.innerHTML = '<option value="all">All categories</option>' +
+          cats.map((c) => `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
+        apply();
+      } catch (e) { grid.innerHTML = emptyHTML('Could not load courses — is the server running?', '⚠️'); }
+    })();
+
+    searchEl.addEventListener('input', apply);
+    catEl.addEventListener('change', apply);
+    lvlEl.addEventListener('change', apply);
+  </script>
+</body>
+</html>

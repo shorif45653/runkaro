@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard · Runkaro</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/effects.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/ui.css" />
+  <link rel="stylesheet" href="css/sections.css" />
+  <link rel="stylesheet" href="css/pages.css" />
+  <link rel="stylesheet" href="css/dashboard.css" />
+  <link rel="stylesheet" href="css/dashboard2.css" />
+</head>
+<body>
+  <div class="bg-scene" aria-hidden="true"><span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span><span class="blob b4"></span><div class="grid-overlay"></div></div>
+  <header id="site-nav" class="site-nav glass"></header>
+
+  <div class="dash-layout">
+    <aside class="glass dash-side">
+      <div class="dash-brand"><span class="brand-orb">R</span><span>Runkaro <span class="grad-text">Admin</span></span></div>
+      <nav class="dash-menu">
+        <button data-tab="overview" class="active">📊 Overview</button>
+        <button data-tab="courses">📚 Courses</button>
+        <button data-tab="tutorials">🎬 Tutorials</button>
+        <button data-tab="users">👥 Users</button>
+      </nav>
+      <div class="dash-side-foot">
+        <a href="index.html">← View site</a>
+        <button id="logout-btn">↩️ Sign out</button>
+      </div>
+    </aside>
+
+    <main class="dash-main">
+      <div class="dash-head">
+        <div><h1 id="dash-title">Dashboard</h1><p class="muted" id="dash-sub">Platform overview at a glance</p></div>
+        <span class="glass-chip">🔑 Signed in as admin</span>
+      </div>
+
+      <section id="tab-overview" class="tab active">
+        <div class="stat-grid" id="stat-cards"></div>
+        <div class="panel-grid">
+          <div class="glass panel">
+            <h3>Recent users</h3>
+            <ul id="recent-users" style="padding:0"></ul>
+          </div>
+          <div class="glass panel">
+            <h3>Quick actions</h3>
+            <div class="qa-list">
+              <button class="btn btn-primary" data-qa="course">＋ New course</button>
+              <button class="btn" data-qa="tutorial">＋ New tutorial</button>
+              <a class="btn" href="courses.html">🛍️ Browse site as visitor</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-courses" class="tab">
+        <div class="tab-toolbar">
+          <input type="search" id="course-search" placeholder="🔍 Search courses…" />
+          <button class="btn btn-primary" id="add-course">＋ Add course</button>
+        </div>
+        <div class="glass table-wrap">
+          <table>
+            <thead><tr><th>Course</th><th>Level</th><th>Price</th><th>Created</th><th style="text-align:right">Actions</th></tr></thead>
+            <tbody id="courses-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="tab-tutorials" class="tab">
+        <div class="tab-toolbar">
+          <input type="search" id="tutorial-search" placeholder="🔍 Search tutorials…" />
+          <button class="btn btn-primary" id="add-tutorial">＋ Add tutorial</button>
+        </div>
+        <div class="glass table-wrap">
+          <table>
+            <thead><tr><th>Tutorial</th><th>Level</th><th>Source</th><th>Created</th><th style="text-align:right">Actions</th></tr></thead>
+            <tbody id="tutorials-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="tab-users" class="tab">
+        <div class="tab-toolbar">
+          <input type="search" id="user-search" placeholder="🔍 Search users…" />
+        </div>
+        <div class="glass table-wrap">
+          <table>
+            <thead><tr><th>User</th><th>Role</th><th>Status</th><th>Joined</th><th style="text-align:right">Actions</th></tr></thead>
+            <tbody id="users-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="modal-root"></div>
+  <div id="toast-root"></div>
+
+  <script src="js/api.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/nav.js"></script>
+  <script src="js/dashboard-modals.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/dashboard-courses.js"></script>
+  <script src="js/dashboard-tutorials.js"></script>
+  <script src="js/dashboard-users.js"></script>
+  <script>renderNav('dashboard');</script>
+</body>
+</html>

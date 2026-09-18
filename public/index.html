@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Runkaro — Learn anything. Beautifully.</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/effects.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/ui.css" />
+  <link rel="stylesheet" href="css/sections.css" />
+  <link rel="stylesheet" href="css/pages.css" />
+</head>
+<body>
+  <div class="bg-scene" aria-hidden="true"><span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span><span class="blob b4"></span><div class="grid-overlay"></div></div>
+  <header id="site-nav" class="site-nav glass"></header>
+
+  <main class="container">
+    <section class="hero">
+      <span class="glass-chip hero-badge">✨ A liquid glass learning experience</span>
+      <h1>Learn anything.<br /><span class="grad-text">Beautifully.</span></h1>
+      <p class="lead">Runkaro brings expert-led courses and hands-on tutorials together in one stunning platform. Sign up free and start learning in seconds.</p>
+      <div class="hero-cta">
+        <a class="btn btn-primary btn-lg" href="courses.html">📚 Explore courses</a>
+        <a class="btn btn-lg" href="tutorials.html">🎬 Watch tutorials</a>
+      </div>
+      <div class="hero-stats">
+        <div class="glass stat-chip"><b id="stat-courses">—</b><span>Courses</span></div>
+        <div class="glass stat-chip"><b id="stat-tutorials">—</b><span>Tutorials</span></div>
+        <div class="glass stat-chip"><b id="stat-learners">—</b><span>Enrollments</span></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><h2>Featured <span class="grad-text">courses</span></h2><a class="btn btn-sm" href="courses.html">View all →</a></div>
+      <div id="featured-courses" class="grid"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><h2>Trending <span class="grad-text">tutorials</span></h2><a class="btn btn-sm" href="tutorials.html">View all →</a></div>
+      <div id="featured-tutorials" class="grid"></div>
+    </section>
+
+    <section class="steps">
+      <div class="glass glass-hover step"><span class="step-n grad-text">01</span><h3>Create an account</h3><p class="muted">Anyone can join — sign up in seconds, no credit card needed.</p></div>
+      <div class="glass glass-hover step"><span class="step-n grad-text">02</span><h3>Pick a course or tutorial</h3><p class="muted">Browse by category and level, then enroll with one click.</p></div>
+      <div class="glass glass-hover step"><span class="step-n grad-text">03</span><h3>Learn &amp; grow</h3><p class="muted">Track everything you join in “My Learning” and level up.</p></div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><div class="container inner"><span>© <span id="year"></span> Runkaro — learn in style.</span><span>Built with liquid glassmorphism ✦</span></div></footer>
+  <div id="toast-root"></div>
+
+  <script src="js/api.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/nav.js"></script>
+  <script>
+    renderNav('home');
+    document.getElementById('year').textContent = new Date().getFullYear();
+    (async () => {
+      try {
+        const [c, t] = await Promise.all([api('/courses'), api('/tutorials')]);
+        document.getElementById('featured-courses').innerHTML =
+          c.courses.slice(0, 3).map(courseCard).join('') || emptyHTML('No courses yet — check back soon!', '📚');
+        document.getElementById('featured-tutorials').innerHTML =
+          t.tutorials.slice(0, 3).map(tutorialCard).join('') || emptyHTML('No tutorials yet — check back soon!', '🎬');
+        document.getElementById('stat-courses').textContent = c.courses.length;
+        document.getElementById('stat-tutorials').textContent = t.tutorials.length;
+        document.getElementById('stat-learners').textContent = c.courses.reduce((a, x) => a + (x.enrolled || 0), 0);
+      } catch (e) { console.warn(e); }
+    })();
+  </script>
+</body>
+</html>

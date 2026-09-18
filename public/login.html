@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign in · Runkaro</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/effects.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/ui.css" />
+  <link rel="stylesheet" href="css/sections.css" />
+  <link rel="stylesheet" href="css/pages.css" />
+</head>
+<body>
+  <div class="bg-scene" aria-hidden="true"><span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span><span class="blob b4"></span><div class="grid-overlay"></div></div>
+  <header id="site-nav" class="site-nav glass"></header>
+
+  <main class="auth-wrap">
+    <form class="glass auth-card" id="login-form" novalidate>
+      <a class="brand" href="index.html"><span class="brand-orb">R</span><span class="brand-name">Run<span class="grad-text">karo</span></span></a>
+      <h1>Welcome back</h1>
+      <p class="muted sub">Sign in to continue your learning journey.</p>
+      <div class="field"><label for="email">Email</label><input id="email" type="email" required placeholder="you@example.com" autocomplete="email" /></div>
+      <div class="field"><label for="password">Password</label><input id="password" type="password" required placeholder="••••••••" autocomplete="current-password" /></div>
+      <button class="btn btn-primary btn-block" type="submit" id="submit-btn">Sign in</button>
+      <p class="auth-alt">New to Runkaro? <a href="register.html">Create an account</a></p>
+      <div class="demo-box">
+        <p class="demo-title">⚡ Demo credentials</p>
+        <div class="demo-row"><span class="who">Admin</span><code>admin@runkaro.com / Admin@123</code><button type="button" class="btn btn-mini" data-fill="admin@runkaro.com|Admin@123">Use</button></div>
+        <div class="demo-row"><span class="who">Student</span><code>student@runkaro.com / Student@123</code><button type="button" class="btn btn-mini" data-fill="student@runkaro.com|Student@123">Use</button></div>
+      </div>
+    </form>
+  </main>
+  <div id="toast-root"></div>
+
+  <script src="js/api.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/nav.js"></script>
+  <script>
+    renderNav(null);
+    const params = new URLSearchParams(location.search);
+    const next = params.get('next');
+    if (Auth.isLoggedIn()) location.replace(Auth.isAdmin() && !next ? 'dashboard.html' : (next || 'courses.html'));
+    document.querySelectorAll('[data-fill]').forEach((b) => b.addEventListener('click', () => {
+      const [em, pw] = b.dataset.fill.split('|');
+      document.getElementById('email').value = em;
+      document.getElementById('password').value = pw;
+    }));
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submit-btn');
+      btn.disabled = true;
+      try {
+        const { token, user } = await api('/auth/login', {
+          method: 'POST',
+          body: { email: document.getElementById('email').value.trim(), password: document.getElementById('password').value },
+        });
+        Auth.save(token, user);
+        toast(`Welcome back, ${user.name}!`, 'success');
+        setTimeout(() => { location.href = user.role === 'admin' && !next ? 'dashboard.html' : (next || 'courses.html'); }, 500);
+      } catch (err) { toast(err.message, 'error'); btn.disabled = false; }
+    });
+  </script>
+</body>
+</html>

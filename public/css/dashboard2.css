@@ -1,0 +1,25 @@
+/* Runkaro — admin modals + dashboard responsive */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 120; display: none; align-items: center; justify-content: center;
+  padding: 20px; background: rgba(4, 7, 18, 0.6);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+}
+.modal-overlay.open { display: flex; animation: fade-in 0.25s ease; }
+@keyframes fade-in { from { opacity: 0; } }
+.modal { width: 100%; max-width: 560px; max-height: calc(100vh - 40px); overflow: auto; padding: 26px; animation: pop-in 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.25); }
+.modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+.modal-head h2 { font-size: 1.25rem; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.radio-row { display: flex; gap: 16px; margin-bottom: 4px; font-size: 0.9rem; color: var(--muted); flex-wrap: wrap; }
+.radio-row label { display: flex; align-items: center; gap: 7px; cursor: pointer; }
+.modal-foot { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
+
+@media (max-width: 900px) {
+  .dash-layout { grid-template-columns: 1fr; }
+  .dash-side { position: static; min-height: 0; flex-direction: row; align-items: center; overflow-x: auto; padding: 12px 16px; }
+  .dash-menu { flex-direction: row; }
+  .dash-brand { flex: none; }
+  .dash-side-foot { margin: 0; flex-direction: row; border: none; padding: 0; }
+  .panel-grid { grid-template-columns: 1fr; }
+  .form-row { grid-template-columns: 1fr; }
+}

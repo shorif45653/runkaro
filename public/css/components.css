@@ -1,0 +1,49 @@
+/* Runkaro — navigation + buttons */
+.site-nav { position: sticky; top: 14px; z-index: 60; margin: 14px auto 0; max-width: 1180px; border-radius: 999px; overflow: visible; }
+.nav-inner { display: flex; align-items: center; gap: 18px; padding: 10px 22px; }
+.brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.25rem; letter-spacing: 0.2px; flex: none; }
+.brand-orb {
+  display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; flex: none;
+  font-size: 1.05rem; color: #fff;
+  background: linear-gradient(135deg, var(--violet), var(--cyan));
+  box-shadow: 0 6px 18px rgba(139, 92, 246, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+.nav-links { display: flex; gap: 6px; flex: 1; justify-content: center; }
+.nav-link { padding: 8px 14px; border-radius: 999px; color: var(--muted); font-weight: 500; font-size: 0.95rem; transition: 0.25s; border: 1px solid transparent; white-space: nowrap; }
+.nav-link:hover { color: var(--text); background: rgba(255, 255, 255, 0.07); }
+.nav-link.active { color: #fff; background: rgba(255, 255, 255, 0.10); border-color: rgba(255, 255, 255, 0.14); }
+.nav-right { display: flex; align-items: center; gap: 12px; margin-left: auto; flex: none; }
+.nav-auth { display: flex; align-items: center; gap: 10px; }
+.nav-user { position: relative; display: flex; align-items: center; gap: 8px; }
+.avatar-btn { width: 40px; height: 40px; border-radius: 50%; padding: 2px; border: 1px solid rgba(255, 255, 255, 0.25); background: rgba(255, 255, 255, 0.06); cursor: pointer; display: grid; place-items: center; transition: 0.2s; }
+.avatar-btn:hover { border-color: rgba(255, 255, 255, 0.5); }
+.avatar { display: grid; place-items: center; width: 100%; height: 100%; border-radius: 50%; font-weight: 700; color: #fff; background: linear-gradient(135deg, var(--violet), var(--cyan)); }
+.user-menu { position: absolute; right: 0; top: calc(100% + 12px); min-width: 240px; padding: 10px; display: none; flex-direction: column; gap: 2px; z-index: 80; border-radius: 16px; }
+.user-menu.open { display: flex; animation: pop-in 0.22s ease; }
+.user-menu-head { padding: 8px 12px 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.09); margin-bottom: 6px; display: flex; flex-direction: column; gap: 2px; }
+.user-menu a, .user-menu button { text-align: left; padding: 10px 12px; border-radius: 10px; color: var(--text); background: transparent; border: none; cursor: pointer; font-size: 0.95rem; transition: 0.15s; }
+.user-menu a:hover, .user-menu button:hover { background: rgba(255, 255, 255, 0.08); }
+.nav-burger { display: none; width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--glass-border); background: rgba(255, 255, 255, 0.07); color: var(--text); font-size: 1.1rem; cursor: pointer; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 11px 20px; border-radius: 14px; border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.08); color: var(--text); font-weight: 600; font-size: 0.95rem;
+  cursor: pointer; transition: transform 0.2s, box-shadow 0.25s, background 0.25s, border-color 0.25s;
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+}
+.btn:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.13); border-color: rgba(255, 255, 255, 0.28); box-shadow: 0 10px 24px rgba(2, 6, 23, 0.4); }
+.btn:active { transform: translateY(0); }
+.btn-primary {
+  background: linear-gradient(135deg, var(--violet), #6366f1 55%, var(--cyan)); border: none; color: #fff;
+  box-shadow: 0 10px 26px rgba(124, 58, 237, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.btn-primary:hover { background: linear-gradient(135deg, #9d6bff, #4f74ff 55%, #3ddcf2); box-shadow: 0 14px 34px rgba(124, 58, 237, 0.55); }
+.btn-danger { background: rgba(251, 113, 133, 0.14); border-color: rgba(251, 113, 133, 0.35); color: #fda4af; }
+.btn-danger:hover { background: rgba(251, 113, 133, 0.24); }
+.btn-ghost { background: transparent; }
+.btn-sm { padding: 8px 14px; font-size: 0.85rem; border-radius: 12px; }
+.btn-mini { padding: 5px 10px; font-size: 0.75rem; border-radius: 9px; }
+.btn-lg { padding: 14px 26px; font-size: 1.02rem; border-radius: 16px; }
+.btn-block { width: 100%; }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }

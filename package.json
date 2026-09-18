@@ -1,0 +1,19 @@
+{
+  "name": "runkaro",
+  "version": "1.0.0",
+  "description": "Runkaro — online learning platform with courses, tutorials and an admin dashboard, wrapped in a liquid glassmorphism UI.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1"
+  }
+}

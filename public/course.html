@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Course · Runkaro</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/effects.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/ui.css" />
+  <link rel="stylesheet" href="css/sections.css" />
+  <link rel="stylesheet" href="css/pages.css" />
+</head>
+<body>
+  <div class="bg-scene" aria-hidden="true"><span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span><span class="blob b4"></span><div class="grid-overlay"></div></div>
+  <header id="site-nav" class="site-nav glass"></header>
+
+  <main class="container">
+    <div class="page-hero"><a class="btn btn-sm" href="courses.html">← All courses</a></div>
+    <div id="detail"></div>
+  </main>
+  <div id="toast-root"></div>
+
+  <script src="js/api.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/nav.js"></script>
+  <script>
+    renderNav('courses');
+    const id = new URLSearchParams(location.search).get('id');
+    const detailEl = document.getElementById('detail');
+
+    (async function boot() {
+      if (!id) { location.href = 'courses.html'; return; }
+      let course;
+      try { course = (await api('/courses/' + id)).course; }
+      catch (e) { detailEl.innerHTML = emptyHTML(e.status === 404 ? 'This course does not exist.' : 'Could not load this course.', '🔍'); return; }
+      let enrolled = false;
+      if (Auth.isLoggedIn()) {
+        try { enrolled = (await api('/courses/mine')).courses.some((c) => c.id === id); } catch { /* ignore */ }
+      }
+      render(course, enrolled);
+    })();
+
+    function render(c, enrolled) {
+      detailEl.innerHTML = `<div class="detail-grid">
+        <article class="glass detail-main">
+          <div class="detail-thumb">${thumbHTML(c)}</div>
+          <div class="meta-row"><span class="badge badge-cat">${escapeHTML(c.category)}</span>${levelBadge(c.level)}</div>
+          <h1>${escapeHTML(c.title)}</h1>
+          <p class="muted">By ${escapeHTML(c.instructor)} · Published ${formatDate(c.createdAt)}</p>
+          <p class="detail-desc">${escapeHTML(c.description || 'No description yet.')}</p>
+        </article>
+        <aside>
+          <div class="glass detail-side">
+            <div class="side-price ${Number(c.price) > 0 ? '' : 'free'}">${priceLabel(c.price)}</div>
+            <div class="kv"><span>Level</span><b>${escapeHTML(c.level)}</b></div>
+            <div class="kv"><span>Duration</span><b>${escapeHTML(c.duration || 'Self-paced')}</b></div>
+            <div class="kv"><span>Category</span><b>${escapeHTML(c.category)}</b></div>
+            <div class="kv" style="border-bottom:none"><span>Enrolled</span><b id="enrolled-count">${c.enrolled}</b></div>
+            <div class="side-actions" id="enroll-area"></div>
+            ${Auth.isAdmin() ? '<a class="btn btn-sm" href="dashboard.html">🛠️ Manage in dashboard</a>' : ''}
+          </div>
+        </aside>
+      </div>`;
+      const area = document.getElementById('enroll-area');
+      if (!Auth.isLoggedIn()) {
+        area.innerHTML = '<button class="btn btn-primary" id="enroll-btn">Sign in to enroll</button>';
+        document.getElementById('enroll-btn').addEventListener('click', () => {
+          location.href = 'login.html?next=' + encodeURIComponent(location.pathname + location.search);
+        });
+      } else if (enrolled) {
+        area.innerHTML = '<button class="btn" disabled>✓ Enrolled</button><a class="btn btn-sm" href="my-learning.html">Go to My Learning</a>';
+      } else {
+        area.innerHTML = '<button class="btn btn-primary" id="enroll-btn">🎓 Enroll now</button>';
+        document.getElementById('enroll-btn').addEventListener('click', async () => {
+          const btn = document.getElementById('enroll-btn');
+          btn.disabled = true;
+          try {
+            await api('/courses/' + c.id + '/enroll', { method: 'POST' });
+            toast('You are enrolled! Find it in My Learning.', 'success');
+            btn.textContent = '✓ Enrolled';
+            const cnt = document.getElementById('enrolled-count');
+            if (cnt) cnt.textContent = Number(cnt.textContent) + 1;
+          } catch (e) { toast(e.message, 'error'); btn.disabled = false; }
+        });
+      }
+    }
+  </script>
+</body>
+</html>

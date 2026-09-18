@@ -1,0 +1,13 @@
+# Render Blueprint — one-click free deploy for Runkaro.
+# Commit this file, push to GitHub, then on render.com choose
+# "New +" → "Blueprint" and pick the repo — everything below is prefilled.
+# Docs: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: runkaro
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
