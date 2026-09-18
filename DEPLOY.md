@@ -41,6 +41,8 @@ treat it as durable storage.
 
 ## Option B — Oracle Cloud Always Free (free forever, always-on, persistent)
 
+> **Full click-by-click walkthrough with a one-shot server script: see [`DEPLOY-ORACLE.md`](DEPLOY-ORACLE.md).**
+
 Still fully $0 in 2026. The ARM allowance is now **2 OCPU / 12 GB** (halved from 4/24), but the
 tiny AMD micro VM (1 GB RAM) is plenty for Runkaro. Includes **200 GB storage** and ~10 TB/mo
 egress. Signup needs a credit card for identity verification only — never charged on Always Free.

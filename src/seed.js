@@ -13,14 +13,21 @@ function seed() {
   const db = dbSvc.get();
   let changed = false;
 
+  // Credentials can be overridden with env vars (see deploy/ecosystem.config.js).
+  const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'admin@runkaro.com').toLowerCase();
+  const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin@123';
+  const STUDENT_EMAIL = (process.env.STUDENT_EMAIL || 'student@runkaro.com').toLowerCase();
+  const STUDENT_PASSWORD = process.env.STUDENT_PASSWORD || 'Student@123';
+
+
   if (db.users.length === 0) {
     const now = new Date().toISOString();
     db.users.push(
       {
         id: dbSvc.nextId('user'),
         name: 'Demo Admin',
-        email: 'admin@runkaro.com',
-        passwordHash: bcrypt.hashSync('Admin@123', 10),
+        email: ADMIN_EMAIL,
+        passwordHash: bcrypt.hashSync(ADMIN_PASSWORD, 10),
         role: 'admin',
         status: 'active',
         createdAt: now,
@@ -28,15 +35,15 @@ function seed() {
       {
         id: dbSvc.nextId('user'),
         name: 'Demo Student',
-        email: 'student@runkaro.com',
-        passwordHash: bcrypt.hashSync('Student@123', 10),
+        email: STUDENT_EMAIL,
+        passwordHash: bcrypt.hashSync(STUDENT_PASSWORD, 10),
         role: 'user',
         status: 'active',
         createdAt: now,
       }
     );
     changed = true;
-    console.log('[seed] Created demo accounts: admin@runkaro.com / Admin@123 and student@runkaro.com / Student@123');
+    console.log(`[seed] Created accounts — admin: ${ADMIN_EMAIL} · student: ${STUDENT_EMAIL} (override with ADMIN_EMAIL/ADMIN_PASSWORD env vars)`);
   }
 
   if (db.courses.length === 0) {
