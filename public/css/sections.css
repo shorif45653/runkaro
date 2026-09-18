@@ -16,6 +16,17 @@
 
 .course-card, .tutorial-card { display: flex; flex-direction: column; transition: transform 0.25s, box-shadow 0.3s; cursor: pointer; }
 .course-card:hover, .tutorial-card:hover { transform: translateY(-6px); box-shadow: 0 22px 50px rgba(2, 6, 23, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.18); }
+.content-list { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.content-chip { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 7px 10px; border-radius: 10px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); font-size: 0.85rem; }
+.content-chip.new { border-color: rgba(34, 211, 238, 0.35); }
+.content-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.materials { margin-top: 22px; padding-top: 18px; border-top: 1px dashed rgba(255, 255, 255, 0.12); }
+.materials h3 { font-size: 1.05rem; margin-bottom: 10px; }
+.material-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; background: rgba(255, 255, 255, 0.045); margin-top: 8px; transition: 0.2s; }
+.material-item:hover { background: rgba(255, 255, 255, 0.09); }
+.material-item .mi-ico { font-size: 1.3rem; flex: none; }
+.material-item .mi-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; font-size: 0.92rem; }
+.material-item .mi-size { color: var(--muted); font-size: 0.78rem; flex: none; }
 .card-thumb { height: 165px; position: relative; border-bottom: 1px solid rgba(255, 255, 255, 0.09); flex: none; }
 .card-thumb img, .thumb-ph { width: 100%; height: 100%; object-fit: cover; }
 .thumb-ph { display: grid; place-items: center; font-size: 3rem; font-weight: 800; color: rgba(255, 255, 255, 0.85); background: linear-gradient(135deg, rgba(139, 92, 246, 0.5), rgba(34, 211, 238, 0.35)); }

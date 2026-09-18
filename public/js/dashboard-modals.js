@@ -17,6 +17,11 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
       <div class="field"><label>Description</label><textarea id="c-description" placeholder="What will students learn?"></textarea></div>
       <div class="field"><label>Thumbnail image (optional)</label><input id="c-thumbnail" type="file" accept="image/*"></div>
+      <div class="field">
+        <label>📁 Course content files (lessons, PDFs, videos — optional, up to 20)</label>
+        <input id="c-content" type="file" multiple>
+        <div id="c-content-list" class="content-list"></div>
+      </div>
       <div class="modal-foot"><button type="button" class="btn" data-close>Cancel</button><button type="submit" class="btn btn-primary" id="c-save">Save course</button></div>
     </form>
   </div>

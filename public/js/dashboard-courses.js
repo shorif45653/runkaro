@@ -39,7 +39,19 @@ document.addEventListener('DOMContentLoaded', () => {
     $('#c-price').value = course ? course.price : 0;
     $('#c-description').value = course ? course.description || '' : '';
     $('#c-thumbnail').value = '';
+    $('#c-content').value = '';
+    renderContentList();
     $('#course-modal').classList.add('open');
+  }
+
+  /** Preview chips for newly chosen content files + existing files with remove buttons. */
+  function renderContentList() {
+    const listEl = $('#c-content-list');
+    const pending = Array.from($('#c-content').files || []);
+    const existing = D.editingCourse ? (D.editingCourse.content || []) : [];
+    listEl.innerHTML =
+      existing.map((f) => `<div class="content-chip"><span title="${escapeHTML(f.originalName || f.name)}">📎 ${escapeHTML(f.originalName || f.name)}</span><button type="button" class="btn btn-mini" data-remove-existing="${escapeHTML(f.name)}" title="Delete from course">✕</button></div>`).join('') +
+      pending.map((f, i) => `<div class="content-chip new"><span title="${escapeHTML(f.name)}">🆕 ${escapeHTML(f.name)} (${(f.size / 1024 / 1024).toFixed(1)} MB)</span><button type="button" class="btn btn-mini" data-remove-pending="${i}">✕</button></div>`).join('');
   }
 
   async function submitCourse(e) {
@@ -54,6 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fd.append('description', $('#c-description').value);
     const file = $('#c-thumbnail').files[0];
     if (file) fd.append('thumbnail', file);
+    for (const f of $('#c-content').files) fd.append('content', f);
     btn.disabled = true;
     try {
       if (D.editingCourse) await api('/courses/' + D.editingCourse.id, { method: 'PUT', formData: fd });
@@ -76,6 +89,28 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   $('#add-course').addEventListener('click', () => openCourseModal(null));
+  $('#c-content').addEventListener('change', renderContentList);
+  $('#c-content-list').addEventListener('click', async (e) => {
+    const pending = e.target.closest('[data-remove-pending]');
+    if (pending) {
+      const dt = new DataTransfer();
+      Array.from($('#c-content').files).forEach((f, i) => { if (i !== Number(pending.dataset.removePending)) dt.items.add(f); });
+      $('#c-content').files = dt.files;
+      renderContentList();
+      return;
+    }
+    const existing = e.target.closest('[data-remove-existing]');
+    if (existing && confirm('Delete this content file from the course? The file is removed permanently.')) {
+      try {
+        await api('/courses/' + D.editingCourse.id + '/content/' + encodeURIComponent(existing.dataset.removeExisting), { method: 'DELETE' });
+        toast('Content file removed', 'success');
+        const fresh = (await api('/courses/' + D.editingCourse.id)).course;
+        D.editingCourse = fresh;
+        D.courses = D.courses.map((c) => (c.id === fresh.id ? fresh : c));
+        renderContentList();
+      } catch (err) { toast(err.message, 'error'); }
+    }
+  });
   $('#course-search').addEventListener('input', (e) => renderCourses(e.target.value));
   $('#courses-tbody').addEventListener('click', (e) => {
     const edit = e.target.closest('[data-edit]');

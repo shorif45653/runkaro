@@ -46,6 +46,23 @@
     })();
 
     function render(c, enrolled) {
+      const canSeeMaterials = enrolled || Auth.isAdmin();
+      const materials = c.content || [];
+      const materialsHTML = !canSeeMaterials || !materials.length ? '' :
+        `<div class="materials">
+          <h3>📚 Course materials (${materials.length})</h3>
+          ${materials.map((f) => {
+            const size = f.size > 1048576 ? (f.size / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(f.size / 1024)) + ' KB';
+            const icon = /\.(mp4|webm|ogg|mov|mkv)$/i.test(f.name) ? '🎬' : /\.(png|jpe?g|gif|webp|svg)$/i.test(f.name) ? '🖼️' : /\.pdf$/i.test(f.name) ? '📕' : /\.(zip|rar|7z)$/i.test(f.name) ? '🗜️' : '📄';
+            const openInline = /\.(mp4|webm|ogg|mov|mkv|png|jpe?g|gif|webp|svg|pdf)$/i.test(f.name);
+            return `<a class="material-item" href="${escapeHTML(f.url)}" ${openInline ? 'target="_blank" rel="noopener"' : 'download'}>
+              <span class="mi-ico">${icon}</span>
+              <span class="mi-name">${escapeHTML(f.originalName || f.name)}</span>
+              <span class="mi-size">${size}</span>
+              <span class="btn btn-sm">${openInline ? '▶ Open' : '⬇ Download'}</span>
+            </a>`;
+          }).join('')}
+        </div>`;
       detailEl.innerHTML = `<div class="detail-grid">
         <article class="glass detail-main">
           <div class="detail-thumb">${thumbHTML(c)}</div>
@@ -53,6 +70,7 @@
           <h1>${escapeHTML(c.title)}</h1>
           <p class="muted">By ${escapeHTML(c.instructor)} · Published ${formatDate(c.createdAt)}</p>
           <p class="detail-desc">${escapeHTML(c.description || 'No description yet.')}</p>
+          ${materialsHTML}
         </article>
         <aside>
           <div class="glass detail-side">
