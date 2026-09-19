@@ -9,17 +9,53 @@
 const express = require('express');
 const path = require('path');
 const dbSvc = require('./src/db');
+const cloud = require('./src/cloud');
 const { seed } = require('./src/seed');
 const { authenticate, requireAdmin } = require('./src/middleware/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-dbSvc.load();
-seed();
+/* Content types for cloud-served uploads (local files are handled by express.static). */
+const MIME_TYPES = {
+  '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp',
+  '.gif': 'image/gif', '.avif': 'image/avif', '.svg': 'image/svg+xml',
+  '.mp4': 'video/mp4', '.webm': 'video/webm', '.ogg': 'video/ogg', '.ogv': 'video/ogg',
+  '.mov': 'video/quicktime', '.mkv': 'video/x-matroska', '.m4v': 'video/x-m4v',
+  '.mp3': 'audio/mpeg', '.wav': 'audio/wav', '.m4a': 'audio/mp4', '.aac': 'audio/aac',
+  '.pdf': 'application/pdf', '.txt': 'text/plain', '.csv': 'text/csv',
+  '.doc': 'application/msword', '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  '.xls': 'application/vnd.ms-excel', '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  '.ppt': 'application/vnd.ms-powerpoint', '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  '.zip': 'application/zip', '.rar': 'application/vnd.rar', '.7z': 'application/x-7z-compressed',
+};
+
+/** Serves /uploads/<name> from Cloudinary when the file is not on local disk. */
+async function serveFromCloud(req, res) {
+  if (!cloud.status().files) return res.status(404).send('Not found');
+  const name = path.basename(req.params.name || '');
+  if (!name || name.startsWith('.')) return res.status(400).send('Bad request');
+  try {
+    const upstream = await cloud.openDownload(name, req.headers.range);
+    const ext = path.extname(name).toLowerCase();
+    const inline = /^(\.jpg|\.jpeg|\.png|\.webp|\.gif|\.avif|\.svg|\.mp4|\.webm|\.ogv|\.ogg|\.mov|\.mp3|\.wav|\.m4a|\.pdf|\.txt|\.csv)$/.test(ext);
+    res.status(upstream.statusCode === 206 ? 206 : 200);
+    res.setHeader('Content-Type', upstream.headers['content-type'] || MIME_TYPES[ext] || 'application/octet-stream');
+    res.setHeader('Accept-Ranges', 'bytes');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.setHeader('Content-Disposition', `${inline ? 'inline' : 'attachment'}; filename="${name.replace(/"/g, '')}"`);
+    if (upstream.headers['content-length']) res.setHeader('Content-Length', upstream.headers['content-length']);
+    if (upstream.headers['content-range']) res.setHeader('Content-Range', upstream.headers['content-range']);
+    upstream.pipe(res);
+  } catch (err) {
+    res.status(err.status || 404).send('Not found');
+  }
+}
 
 app.use(express.json({ limit: '1mb' }));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), { maxAge: '1h' }));
+// Files missing from the (ephemeral) local disk are streamed from Cloudinary:
+app.get('/uploads/:name', serveFromCloud);
 app.use(express.static(path.join(__dirname, 'public')));
 
 // API routes
@@ -30,7 +66,7 @@ app.use('/api/users', require('./src/routes/users'));
 app.use('/api/files', require('./src/routes/files'));
 
 app.get('/api/health', (req, res) => {
-  res.json({ ok: true, name: 'Runkaro API', time: new Date().toISOString() });
+  res.json({ ok: true, name: 'Runkaro API', time: new Date().toISOString(), cloud: dbSvc.status() });
 });
 
 // Admin dashboard stats
@@ -64,11 +100,31 @@ app.use((err, req, res, next) => {
   res.status(status).json({ message: err.message || 'Internal server error' });
 });
 
-app.listen(PORT, () => {
-  console.log('');
-  console.log('  ✦ Runkaro is running');
-  console.log(`  ✦ Site      : http://localhost:${PORT}`);
-  console.log(`  ✦ Dashboard : http://localhost:${PORT}/dashboard.html`);
-  console.log('  ✦ Admin login: set ADMIN_EMAIL / ADMIN_PASSWORD env vars (else the seeded demo credentials apply)');
-  console.log('');
+/** Start: cloud init → seed → listen. */
+async function main() {
+  await dbSvc.init();
+  seed();
+
+  // Flush the last pending snapshot to MongoDB on shutdown (Render sends SIGTERM on deploys).
+  const shutdown = (signal) => {
+    console.log(`\n[server] ${signal} received — saving any pending data…`);
+    setTimeout(() => process.exit(0), 5000).unref(); // never hang the deploy
+    dbSvc.flush().then(() => process.exit(0)).catch(() => process.exit(0));
+  };
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
+
+  app.listen(PORT, () => {
+    console.log('');
+    console.log('  ✦ Runkaro is running');
+    console.log(`  ✦ Site      : http://localhost:${PORT}`);
+    console.log(`  ✦ Dashboard : http://localhost:${PORT}/dashboard.html`);
+    console.log('  ✦ Admin login: set ADMIN_EMAIL / ADMIN_PASSWORD env vars (else the seeded demo credentials apply)');
+    console.log('');
+  });
+}
+
+main().catch((err) => {
+  console.error('[server] Fatal startup error:', err);
+  process.exit(1);
 });

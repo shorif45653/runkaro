@@ -2,56 +2,58 @@
 const router = require('express').Router();
 const path = require('path');
 const fs = require('fs');
-const multer = require('multer');
-const crypto = require('crypto');
 const dbSvc = require('../db');
+const cloud = require('../cloud');
+const { makeUploaders, makeFilename, storeUploaded, withinCloudLimits, UPLOAD_DIR } = require('../upload');
 const { authenticate, requireAdmin } = require('../middleware/auth');
 
 /**
  * Course uploads: thumbnail (image) + content files (lesson materials — any
- * file type, readable names). One multer instance handles both field names;
- * a permissive filter is required because content files can be PDFs, docs…
+ * file type, readable names). One multer pair handles both field names;
+ * content files can be PDFs, docs… so no file filter is applied.
  */
-const courseStorage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, path.join(__dirname, '..', '..', 'uploads')),
-  filename: (req, file, cb) => {
-    const ext = (path.extname(file.originalname || '') || '').toLowerCase();
-    if (file.fieldname === 'thumbnail') {
-      cb(null, `${Date.now()}-${crypto.randomBytes(4).toString('hex')}${ext}`);
-    } else {
-      const safe = (path.basename(file.originalname || 'file') || 'file')
-        .replace(/[^a-zA-Z0-9._-]/g, '_')
-        .slice(-80);
-      cb(null, `${Date.now()}-${crypto.randomBytes(4).toString('hex')}-${safe}`);
-    }
-  },
+const up = makeUploaders({
+  nameStyle: (file) =>
+    file.fieldname === 'thumbnail'
+      ? makeFilename(file.originalname)
+      : makeFilename(file.originalname, { readable: true }),
 });
-const courseUpload = multer({ storage: courseStorage, limits: { fileSize: 150 * 1024 * 1024 } });
 
 /** Accepts 1 thumbnail + up to 20 content files per request. */
 function uploadCourseFiles() {
-  return courseUpload.fields([
+  return up.dynamic((u) => u.fields([
     { name: 'thumbnail', maxCount: 1 },
     { name: 'content', maxCount: 20 },
-  ]);
+  ]));
 }
 
+/** Async route wrapper. */
+const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+
 /** Build the content file list from an uploaded request (fields mode: req.files.content). */
-function contentFromReq(req) {
+async function contentFromReq(req) {
   const list = req.files && Array.isArray(req.files.content) ? req.files.content : [];
-  return list.map((f) => ({
-    name: f.filename,
-    originalName: f.originalname,
-    url: '/uploads/' + f.filename,
-    size: f.size,
-  }));
+  const out = [];
+  for (const f of list) {
+    const name = await storeUploaded(f, { readable: true });
+    out.push({
+      name,
+      originalName: f.originalname,
+      url: '/uploads/' + name,
+      size: f.size,
+    });
+  }
+  return out;
 }
 
 function removeUpload(p) {
-  if (p && typeof p === 'string' && p.startsWith('/uploads/')) {
-    const full = path.join(__dirname, '..', '..', p);
-    fs.promises.unlink(full).catch(() => {});
+  if (!p || typeof p !== 'string' || !p.startsWith('/uploads/')) return;
+  const name = p.slice('/uploads/'.length);
+  if (cloud.status().files) {
+    cloud.deleteFile(name).catch((err) => console.error(`[cloud] Could not delete ${name}: ${err.message}`));
+    return;
   }
+  fs.promises.unlink(path.join(UPLOAD_DIR, name)).catch(() => {});
 }
 
 function enrich(course) {
@@ -96,12 +98,14 @@ router.get('/:id', (req, res) => {
 });
 
 // Admin: create
-router.post('/', authenticate, requireAdmin, uploadCourseFiles(), (req, res) => {
+router.post('/', authenticate, requireAdmin, uploadCourseFiles(), wrap(async (req, res) => {
   const db = dbSvc.get();
   const { title, description, category, level, duration, price } = req.body || {};
   if (!title || !String(title).trim()) {
     return res.status(400).json({ message: 'Title is required' });
   }
+  if (!withinCloudLimits(req, res)) return;
+  const thumb = req.files && req.files.thumbnail && req.files.thumbnail[0];
   const course = {
     id: dbSvc.nextId('course'),
     title: String(title).trim(),
@@ -110,20 +114,18 @@ router.post('/', authenticate, requireAdmin, uploadCourseFiles(), (req, res) => 
     level: level || 'Beginner',
     duration: duration || '',
     price: price === undefined || price === '' ? 0 : Number(price) || 0,
-    thumbnail: req.files && req.files.thumbnail && req.files.thumbnail[0]
-      ? `/uploads/${req.files.thumbnail[0].filename}`
-      : '',
-    content: contentFromReq(req),
+    thumbnail: thumb ? `/uploads/${await storeUploaded(thumb)}` : '',
+    content: await contentFromReq(req),
     createdBy: req.user.id,
     createdAt: new Date().toISOString(),
   };
   db.courses.push(course);
   dbSvc.save();
   res.status(201).json({ course: enrich(course) });
-});
+}));
 
 // Admin: update
-router.put('/:id', authenticate, requireAdmin, uploadCourseFiles(), (req, res) => {
+router.put('/:id', authenticate, requireAdmin, uploadCourseFiles(), wrap(async (req, res) => {
   const db = dbSvc.get();
   const course = db.courses.find((c) => c.id === req.params.id);
   if (!course) return res.status(404).json({ message: 'Course not found' });
@@ -134,18 +136,19 @@ router.put('/:id', authenticate, requireAdmin, uploadCourseFiles(), (req, res) =
   if (level !== undefined) course.level = level;
   if (duration !== undefined) course.duration = duration;
   if (price !== undefined) course.price = Number(price) || 0;
+  if (!withinCloudLimits(req, res)) return;
   const thumb = req.files && req.files.thumbnail && req.files.thumbnail[0];
   if (thumb) {
     removeUpload(course.thumbnail);
-    course.thumbnail = `/uploads/${thumb.filename}`;
+    course.thumbnail = `/uploads/${await storeUploaded(thumb)}`;
   }
-  const newContent = contentFromReq(req);
+  const newContent = await contentFromReq(req);
   if (newContent.length) {
     course.content = (course.content || []).concat(newContent);
   }
   dbSvc.save();
   res.json({ course: enrich(course) });
-});
+}));
 
 // Admin: remove a single content file from a course
 router.delete('/:id/content/:name', authenticate, requireAdmin, (req, res) => {

@@ -4,3 +4,4 @@ uploads/
 .server.pid
 *.log
 .DS_Store
+.env

@@ -1,29 +1,16 @@
-/** Admin file manager: upload, browse and delete files in /uploads. */
+/** Admin file manager: upload, browse and delete files (local /uploads or Cloudinary). */
 const router = require('express').Router();
 const path = require('path');
 const fs = require('fs');
-const multer = require('multer');
-const crypto = require('crypto');
+const cloud = require('../cloud');
 const { authenticate, requireAdmin } = require('../middleware/auth');
-const uploadSvc = require('../upload');
-
-const UPLOAD_DIR = uploadSvc.UPLOAD_DIR;
+const { makeUploaders, makeFilename, storeUploaded, withinCloudLimits, UPLOAD_DIR } = require('../upload');
 
 // Storage that preserves readable (sanitized) original file names.
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, UPLOAD_DIR),
-  filename: (req, file, cb) => {
-    const safe = (path.basename(file.originalname || 'file') || 'file')
-      .replace(/[^a-zA-Z0-9._-]/g, '_')
-      .slice(-80);
-    cb(null, `${Date.now()}-${crypto.randomBytes(4).toString('hex')}-${safe}`);
-  },
-});
+const up = makeUploaders({ nameStyle: (file) => makeFilename(file.originalname, { readable: true }) });
 
-const upload = multer({
-  storage,
-  limits: { fileSize: 150 * 1024 * 1024 }, // 150 MB per file
-});
+/** Async route wrapper. */
+const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
 router.use(authenticate, requireAdmin);
 
@@ -47,55 +34,66 @@ function fmtSize(bytes) {
   return bytes + ' B';
 }
 
-// List all uploaded files (newest first).
-router.get('/', async (req, res) => {
-  try {
+// List all uploaded files (newest first) — from Cloudinary in cloud mode, from disk otherwise.
+router.get('/', wrap(async (req, res) => {
+  let raw;
+  if (cloud.status().files) {
+    raw = await cloud.listFiles(); // [{ name, size, modified }]
+  } else {
     const entries = await fs.promises.readdir(UPLOAD_DIR, { withFileTypes: true });
-    const files = [];
+    raw = [];
     for (const e of entries) {
       if (!e.isFile()) continue;
       const st = await fs.promises.stat(path.join(UPLOAD_DIR, e.name));
-      files.push({
-        name: e.name,
-        url: '/uploads/' + e.name,
-        size: st.size,
-        sizeLabel: fmtSize(st.size),
-        kind: fileKind(e.name),
-        modified: st.mtime.toISOString(),
-      });
+      raw.push({ name: e.name, size: st.size, modified: st.mtime.toISOString() });
     }
-    files.sort((a, b) => new Date(b.modified) - new Date(a.modified));
-    res.json({ files });
-  } catch (err) {
-    res.status(500).json({ message: err.message || 'Could not list files' });
   }
-});
+  const files = raw.map((f) => ({
+    name: f.name,
+    url: '/uploads/' + f.name,
+    size: f.size,
+    sizeLabel: fmtSize(f.size),
+    kind: fileKind(f.name),
+    modified: f.modified,
+  }));
+  files.sort((a, b) => new Date(b.modified) - new Date(a.modified));
+  res.json({ files });
+}));
 
 // Upload up to 10 files per request.
-router.post('/', upload.array('files', 10), (req, res) => {
-  const files = (req.files || []).map((f) => ({
-    name: f.filename,
-    url: '/uploads/' + f.filename,
-    size: f.size,
-    kind: fileKind(f.filename),
-  }));
+router.post('/', up.dynamic((u) => u.array('files', 10)), wrap(async (req, res) => {
+  if (!withinCloudLimits(req, res)) return;
+  const files = [];
+  for (const f of req.files || []) {
+    const name = await storeUploaded(f, { readable: true });
+    files.push({
+      name,
+      url: '/uploads/' + name,
+      size: f.size,
+      kind: fileKind(name),
+    });
+  }
   res.status(201).json({ message: `Uploaded ${files.length} file(s)`, files });
-});
+}));
 
 // Delete one uploaded file.
-router.delete('/:name', async (req, res) => {
+router.delete('/:name', wrap(async (req, res) => {
   const name = path.basename(req.params.name);
   if (!name || name.startsWith('.')) {
     return res.status(400).json({ message: 'Invalid file name' });
   }
-  const full = path.join(UPLOAD_DIR, name);
-  if (!fs.existsSync(full)) return res.status(404).json({ message: 'File not found' });
   try {
+    if (cloud.status().files) {
+      await cloud.deleteFile(name);
+      return res.json({ ok: true });
+    }
+    const full = path.join(UPLOAD_DIR, name);
+    if (!fs.existsSync(full)) return res.status(404).json({ message: 'File not found' });
     await fs.promises.unlink(full);
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ message: err.message || 'Could not delete file' });
   }
-});
+}));
 
 module.exports = router;
