@@ -50,14 +50,19 @@ async function serveFromCloud(req, res) {
     upstream.on('error', () => res.destroy());
   } catch (err) {
     console.error(`[uploads] Could not stream "${name}" from Cloudinary — ${err.message}`);
-    // The file itself is fine but the server could not reach the Cloudinary
-    // CDN — hand the browser the signed URL directly as a fallback.
+    // The file itself may be fine but the server could not reach the Cloudinary
+    // CDN — hand the browser a working URL directly as a fallback.
+    //   1. signed URL generated locally (fast, no API call)
+    //   2. URL confirmed via the Cloudinary Admin API (authoritative)
+    // A genuine 404 from the CDN is double-checked via the API before giving up.
+    let fallback = null;
     if (err.status !== 404) {
-      try {
-        const direct = cloud.signedUrl(name);
-        if (direct) return res.redirect(direct);
-      } catch { /* fall through to 404 */ }
+      try { fallback = cloud.signedUrl(name); } catch { /* ignore */ }
     }
+    if (!fallback) {
+      try { fallback = await cloud.resolveViaApi(name); } catch { /* ignore */ }
+    }
+    if (fallback) return res.redirect(fallback);
     res.status(err.status || 404).send('Not found');
   }
 }

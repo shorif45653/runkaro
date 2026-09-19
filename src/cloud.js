@@ -240,6 +240,23 @@ function signedUrl(name) {
 }
 
 /**
+ * Resolves a stored file to a working URL using the Cloudinary Admin API
+ * (api.cloudinary.com — IPv4, no CDN signature pitfalls). Returns null when
+ * the asset genuinely does not exist.
+ */
+async function resolveViaApi(name) {
+  try {
+    const res = await cloudinary.api.resource(publicId(name), {
+      resource_type: resourceTypeFor(name),
+      type: 'authenticated',
+    });
+    return res.secure_url || null;
+  } catch (err) {
+    return null;
+  }
+}
+
+/**
  * Opens a server-side stream to a stored file (signed URL → HTTPS response).
  * Supports HTTP Range so <video> seeking keeps working.
  *
@@ -343,6 +360,7 @@ module.exports = {
   uploadFile,
   openDownload,
   signedUrl,
+  resolveViaApi,
   deleteFile,
   listFiles,
   status,
