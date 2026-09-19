@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }));
 
   /* ---------- boot ---------- */
-  D.switchTab('overview');
+  D.switchTab((location.hash || '#overview').slice(1));
   D.refreshStats();
   D.loadCourses();
   D.loadTutorials();

@@ -16,12 +16,20 @@ document.addEventListener('DOMContentLoaded', () => {
     files: 'Upload files from your computer and manage them',
   };
 
+  const TABS = ['overview', 'courses', 'tutorials', 'users', 'files'];
+
   function switchTab(name) {
+    if (!TABS.includes(name)) name = 'overview';
     $$('.tab').forEach((t) => t.classList.toggle('active', t.id === 'tab-' + name));
     $$('.dash-menu button').forEach((b) => b.classList.toggle('active', b.dataset.tab === name));
     $('#dash-title').textContent = name === 'overview' ? 'Dashboard' : name.charAt(0).toUpperCase() + name.slice(1);
     $('#dash-sub').textContent = subtitles[name] || '';
+    try { history.replaceState(null, '', '#' + name); } catch (_) { /* ignore */ }
   }
+
+  /* Sidebar navigation — these buttons previously had no click handlers,
+     so clicking Overview/Courses/Tutorials/Users/Files did nothing. */
+  $$('.dash-menu button').forEach((b) => b.addEventListener('click', () => switchTab(b.dataset.tab)));
 
   async function refreshStats() {
     try {
