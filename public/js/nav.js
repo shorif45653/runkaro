@@ -31,7 +31,7 @@ function renderNav(active) {
   }
 
   header.innerHTML = `<div class="nav-inner">
-    <a class="brand" href="index.html"><span class="brand-orb">R</span><span class="brand-name">Run<span class="grad-text">karo</span></span></a>
+    <a class="brand" href="index.html"><img class="brand-orb" src="img/logo.png" alt="Runkaro logo" width="38" height="38"><span class="brand-name">Run<span class="grad-text">karo</span></span></a>
     <nav class="nav-links">
       ${link('index.html', 'home', 'Home')}
       ${link('courses.html', 'courses', 'Courses')}
