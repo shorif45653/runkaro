@@ -227,28 +227,67 @@ function uploadFile(buffer, name) {
 }
 
 /**
- * Opens a server-side stream to a stored file (signed URL → HTTPS response).
- * Supports HTTP Range so <video> seeking keeps working.
+ * Signed, direct Cloudinary URL for a stored file (authenticated assets).
+ * Also used as a browser-redirect fallback when server-side streaming fails.
  */
-function openDownload(name, rangeHeader) {
-  const url = cloudinary.url(publicId(name), {
+function signedUrl(name) {
+  return cloudinary.url(publicId(name), {
     resource_type: resourceTypeFor(name),
     type: 'authenticated',
     sign_url: true,
     secure: true,
   });
-  return new Promise((resolve, reject) => {
-    const req = https.get(url, rangeHeader ? { headers: { Range: rangeHeader } } : undefined, (upstream) => {
-      if (upstream.statusCode >= 400) {
-        upstream.resume();
-        const err = new Error(`Cloudinary responded ${upstream.statusCode} for ${name}`);
-        err.status = 404;
-        return reject(err);
-      }
-      resolve(upstream);
+}
+
+/**
+ * Opens a server-side stream to a stored file (signed URL → HTTPS response).
+ * Supports HTTP Range so <video> seeking keeps working.
+ *
+ * IMPORTANT: forces IPv4 (family: 4). res.cloudinary.com resolves to IPv6
+ * (Cloudflare) first, and hosts without outbound IPv6 (e.g. Render) blackhole
+ * those connections — the request would hang forever. The Cloudinary API host
+ * (api.cloudinary.com, used for uploads/listing) is IPv4-only, which is why
+ * uploads kept working while file streaming hung.
+ */
+function openDownload(name, rangeHeader) {
+  const attempt = (target, redirectsLeft) =>
+    new Promise((resolve, reject) => {
+      const req = https.get(
+        target,
+        {
+          family: 4,
+          ...(rangeHeader ? { headers: { Range: rangeHeader } } : {}),
+        },
+        (upstream) => {
+          // Follow redirects (the CDN may 30x to another edge URL).
+          if (upstream.statusCode >= 300 && upstream.statusCode < 400 && upstream.headers.location) {
+            upstream.resume();
+            if (redirectsLeft <= 0) {
+              const err = new Error(`Too many redirects fetching ${name} from Cloudinary`);
+              err.status = 502;
+              return reject(err);
+            }
+            try {
+              return resolve(attempt(new URL(upstream.headers.location, target).toString(), redirectsLeft - 1));
+            } catch (err) {
+              err.status = 502;
+              return reject(err);
+            }
+          }
+          if (upstream.statusCode >= 400) {
+            upstream.resume();
+            const err = new Error(`Cloudinary responded ${upstream.statusCode} for ${name}`);
+            err.status = 404;
+            return reject(err);
+          }
+          resolve(upstream);
+        }
+      );
+      req.on('error', reject);
+      // Never hang: if the connection stalls, fail after 20s (err.status 504).
+      req.setTimeout(20000, () => req.destroy(Object.assign(new Error(`Timed out fetching ${name} from Cloudinary`), { status: 504 })));
     });
-    req.on('error', reject);
-  });
+  return attempt(signedUrl(name), 3);
 }
 
 async function deleteFile(name) {
@@ -303,6 +342,7 @@ module.exports = {
   maxSizeFor,
   uploadFile,
   openDownload,
+  signedUrl,
   deleteFile,
   listFiles,
   status,

@@ -47,7 +47,17 @@ async function serveFromCloud(req, res) {
     if (upstream.headers['content-length']) res.setHeader('Content-Length', upstream.headers['content-length']);
     if (upstream.headers['content-range']) res.setHeader('Content-Range', upstream.headers['content-range']);
     upstream.pipe(res);
+    upstream.on('error', () => res.destroy());
   } catch (err) {
+    console.error(`[uploads] Could not stream "${name}" from Cloudinary — ${err.message}`);
+    // The file itself is fine but the server could not reach the Cloudinary
+    // CDN — hand the browser the signed URL directly as a fallback.
+    if (err.status !== 404) {
+      try {
+        const direct = cloud.signedUrl(name);
+        if (direct) return res.redirect(direct);
+      } catch { /* fall through to 404 */ }
+    }
     res.status(err.status || 404).send('Not found');
   }
 }
